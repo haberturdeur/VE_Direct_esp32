@@ -32,7 +32,7 @@ static std::regex valueRegEx("(?<=\n.+\t)([0-9]+)");
 
 class VEDirectTable {
 private:
-    std::map<const char*, int32_t> m_values {
+    std::map<std::string, int32_t> m_values {
         { "V", 0 },
         { "V2", 0 },
         { "V3", 0 },
@@ -95,7 +95,7 @@ private:
     };
 
 public:
-    int32_t operator[](const char* i_label) { return m_values[i_label]; }
+    int32_t operator[](std::string i_label) { return m_values[i_label]; }
 
     uint8_t parseMessage(std::string& i_raw);
 };
@@ -114,5 +114,5 @@ public:
     void read();
 
     VEDirectTable& table() { return m_Table; }
-    int32_t operator[](const char* i_label) { return m_Table[i_label]; }
+    int32_t operator[](std::string i_label) { return m_Table[i_label]; }
 };

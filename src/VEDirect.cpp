@@ -8,7 +8,7 @@ uint8_t VEDirectTable::parseMessage(std::string& i_raw){
     {
         regex_search(lineMatch, keyMatch, keyRegEx);
         regex_search(lineMatch, valueMatch, valueRegEx);
-        m_values[keyMatch.str().c_str()] = std::stoi(valueMatch.str(), nullptr, 0);
+        m_values[keyMatch.str()] = std::stoi(valueMatch.str(), nullptr, 0);
         raw = lineMatch.suffix();
         o_counter++;
     }
