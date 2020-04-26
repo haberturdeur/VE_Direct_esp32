@@ -37,23 +37,25 @@ void VEDirect::init(uart_port_t i_uartPort, int i_rxPin, int i_txPin)
     m_uartPort = i_uartPort;
 }
 
-std::string* VEDirect::readRaw()
+std::string VEDirect::readRaw()
 {
     size_t length = 0;
     uart_get_buffered_data_len(m_uartPort, &length);
     if (length) {
-        static uint8_t* receiveBuffer = static_cast<uint8_t*>(malloc(UART_BUFFER_SIZE));
-        int read = uart_read_bytes(m_uartPort, receiveBuffer, UART_BUFFER_SIZE, (3000 / portTICK_RATE_MS));
+        std::string receiveBuffer;
+        receiveBuffer.reserve(UART_BUFFER_SIZE);
+        receiveBuffer.resize(length + 1); //data + \0
+        int read = uart_read_bytes(m_uartPort, receiveBuffer.data, UART_BUFFER_SIZE, (3000 / portTICK_RATE_MS));
         if (read > -1) {
-            static std::string data(reinterpret_cast<char*>(receiveBuffer), read);
+            std::string data = receiveBuffer;
             bool cut = 1;
             if (!m_dirty) {
                 if (data.substr(0, 2) != "\r\n") {
                     int i = data.find("\r\n");
                     if (i < data.length())
                         data = data.substr(i);
-                    else
-                        ESP_LOGW(TAG, "No new line.");
+                    // else
+                    ESP_LOGW(TAG, "No new line.");
                 }
                 cut = 1;
             } else
@@ -64,27 +66,27 @@ std::string* VEDirect::readRaw()
                     read = uart_read_bytes(m_uartPort, readByte, 1, (100 / portTICK_RATE_MS));
                     if (!read) {
                         m_dirty = 0;
-                        return nullptr;
+                        return "";
                     }
                     data.push_back(*reinterpret_cast<char*>(readByte));
                 } while (data.substr(data.length() - 1, 2) != "\n\r");
             }
-            static std::string o_data = data.substr(cut, data.length() - 1);
+            std::string o_data = data.substr(cut, data.length() - 1);
             m_dirty = 1;
-            return &o_data;
+            return o_data;
         }
         ESP_LOGW(TAG, "No data read, but something was buffered.");
-        return nullptr;
+        return "";
     }
     ESP_LOGW(TAG, "No data available.");
-    return nullptr;
+    return "";
 }
 
 int VEDirect::read()
 {
-    std::string* data = readRaw();
-    if (data) {
-        m_Table.parseMessage(*data, 1);
+    std::string data = readRaw();
+    if (!data.empty()) {
+        m_Table.parseMessage(data, 1);
         return 1;
     }
     ESP_LOGE(TAG, "No data passable to table.");

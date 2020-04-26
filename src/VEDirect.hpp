@@ -105,7 +105,7 @@ public:
 class VEDirect {
 private:
     VEDirectTable m_Table;
-    std::string* readRaw();
+    std::string readRaw();
     bool m_dirty = 0;
     uart_port_t m_uartPort;
 
