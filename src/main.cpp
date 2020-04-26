@@ -9,10 +9,18 @@
 #include <string>
 #include <vector>
 
-VEDirect com;
+
 
 extern "C" void app_main()
 {
-    com.init(UART_NUM_1, 14, 27);
-    printf("Voltage: %i", com["V"]);
+    esp_log_level_set(TAG, ESP_LOG_VERBOSE);
+    ESP_LOGI(TAG,"starting");
+    VEDirect com;
+    com.init(UART_NUM_2, 2, 12);
+    ESP_LOGI(TAG, "Started");
+    while(1){
+        if(com.read()>0)
+            printf("Voltage: %i\n", com["V"]);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
 }

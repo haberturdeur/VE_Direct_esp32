@@ -4,6 +4,8 @@
 #include <map>
 #include <string.h>
 #include <string>
+#include <iostream>
+#include <iterator>
 #include <regex>
 
 #include "driver/uart.h"
@@ -22,13 +24,13 @@ static const uart_config_t uartConfig = {
     .parity = UART_PARITY_DISABLE,
     .stop_bits = UART_STOP_BITS_1,
     .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-    .rx_flow_ctrl_thresh = 122,
-    .use_ref_tick = false
+    .rx_flow_ctrl_thresh = 122
 };
 
-static std::regex lineRegEx("\n.+\t[0-9]+");
-static std::regex keyRegEx("(?<=\n)(.+)(?=\t[0-9]+)");
-static std::regex valueRegEx("(?<=\n.+\t)([0-9]+)");
+static const std::regex lineRegEx("\r\n.+\t[0-9]+");
+static const std::regex keyRegEx("\r\n(.+)(?=\t[0-9]+)");
+static const std::regex DirtyLineRegEx(".+\t[0-9]+");
+static const std::regex DirtyKeyRegEx("(.+)(?=\t[0-9]+)");
 
 class VEDirectTable {
 private:
@@ -97,7 +99,7 @@ private:
 public:
     int32_t operator[](std::string i_label) { return m_values[i_label]; }
 
-    uint8_t parseMessage(std::string& i_raw);
+    uint8_t parseMessage(std::string& i_raw, bool i_dirty = 0);
 };
 
 class VEDirect {
@@ -111,7 +113,7 @@ public:
     void init(uart_port_t i_uartPort,
         int i_rxPin = UART_PIN_NO_CHANGE,
         int i_txPin = UART_PIN_NO_CHANGE);
-    void read();
+    int read();
 
     VEDirectTable& table() { return m_Table; }
     int32_t operator[](std::string i_label) { return m_Table[i_label]; }
